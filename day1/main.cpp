@@ -46,7 +46,31 @@ int main(int argc, char const *argv[])
         {
             totalDistance += abs(col1.at(i) - col2.at(i));
         }
+        std::vector<std::tuple<int, int>> similaryScore;
+
+        for (auto i = 0; i < col1.size(); i++)
+        {
+            int currentElement = col1.at(i);
+            int occurences = 0;
+            for (auto j = 0; j < col2.size(); j++)
+            {
+                if (currentElement == col2.at(j))
+                {
+                    occurences++;
+                }
+            }
+            similaryScore.push_back(make_tuple(currentElement, occurences));
+            occurences = 0;
+            currentElement = -1;
+        }
+        int totalSimilarityScore = 0;
+
+        for (auto i = 0; i < similaryScore.size(); i++)
+        {
+            totalSimilarityScore += (std::get<0>(similaryScore.at(i)) * std::get<1>(similaryScore.at(i)));
+        }
         cout << "The total minimum distance between points is " << totalDistance << endl;
+        cout << "The total similarity score is " << totalSimilarityScore << endl;
     }
     return 0;
 }
