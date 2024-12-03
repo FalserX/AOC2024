@@ -3,12 +3,18 @@
 #include "algorithm"
 
 using namespace std;
-
+bool comp(int a)
+{
+    return a > 3 || a == 0;
+}
 bool isSafeReportWithDampener(vector<int> report)
 {
     vector<int> increaseDecreaseValues;
     vector<string> increaseDecreaseState;
-    bool safe = true;
+    int countIncrease = 0;
+    int countDecrease = 0;
+    int countStable = 0;
+    bool safe = false;
     for (size_t reportIdx = 0; reportIdx < report.size() - 1; reportIdx++)
     {
         if (report.at(reportIdx) < report.at(reportIdx + 1))
@@ -23,21 +29,119 @@ bool isSafeReportWithDampener(vector<int> report)
         {
             increaseDecreaseState.push_back("Stable");
         }
-        increaseDecreaseValues.push_back(report.at(reportIdx) - report.at(reportIdx + 1));
+        increaseDecreaseValues.push_back(abs(report.at(reportIdx) - report.at(reportIdx + 1)));
     }
-    if (
-        (count(increaseDecreaseState.begin(), increaseDecreaseState.end(), "Decrease") >= increaseDecreaseState.size() - 1 &&
-         count(increaseDecreaseState.begin(), increaseDecreaseState.end(), "Increase") <= increaseDecreaseState.size() - 1) ||
-        count(increaseDecreaseState.begin(), increaseDecreaseState.end(), "Increase") >= increaseDecreaseState.size() - 1 &&
-            count(increaseDecreaseState.begin(), increaseDecreaseState.end(), "Decrease") <= increaseDecreaseState.size() - 1)
+    countIncrease = count(increaseDecreaseState.begin(), increaseDecreaseState.end(), "Increase");
+    countDecrease = count(increaseDecreaseState.begin(), increaseDecreaseState.end(), "Decrease");
+    countStable = count(increaseDecreaseState.begin(), increaseDecreaseState.end(), "Stable");
+    if (countIncrease + countDecrease + countStable == increaseDecreaseValues.size())
     {
-        string dd = "";
-        for (int increaseDecreaseValue : increaseDecreaseValues)
+        /*For decreasing or increasing only states */
+        if ((countStable == 0 && countIncrease == 0 && countDecrease > 0) ||
+            (countStable == 0 && countDecrease == 0 && countIncrease > 0))
         {
-            if (abs(increaseDecreaseValue) < 1 || abs(increaseDecreaseValue) > 3)
+            for (int increaseDecreaseValue : increaseDecreaseValues)
+            {
+                if (abs(increaseDecreaseValue) < 1 || abs(increaseDecreaseValue) > 3)
+                {
+                    safe = false;
+                    break;
+                }
+                else
+                {
+                    safe = true;
+                }
+            }
+        }
+        if (!safe)
+        {
+            vector<int> tempReportValues;
+            /*For decreasing states*/
+            if (countIncrease <= 1 && countStable <= 1)
+            {
+                auto posIdxIncreaseDecreaseValue = distance(increaseDecreaseValues.begin(), find_if(increaseDecreaseValues.begin(), increaseDecreaseValues.end(), comp));
+                if (posIdxIncreaseDecreaseValue >= report.size() - 1)
+                {
+                    posIdxIncreaseDecreaseValue = distance(increaseDecreaseState.begin(), find(increaseDecreaseState.begin(), increaseDecreaseState.end(), "Decrease"));
+                }
+                for (size_t i = 0; i < report.size(); i++)
+                {
+                    if (i != posIdxIncreaseDecreaseValue + 1)
+                    {
+                        tempReportValues.push_back(report.at(i));
+                    }
+                }
+                increaseDecreaseValues.clear();
+                for (size_t idxValue = 0; idxValue < tempReportValues.size() - 1; idxValue++)
+                {
+                    increaseDecreaseValues.push_back(abs(tempReportValues.at(idxValue) - tempReportValues.at(idxValue + 1)));
+                }
+
+                for (int value : increaseDecreaseValues)
+                {
+                    if (value > 3 || value < 1)
+                    {
+                        safe = false;
+                        break;
+                        ;
+                    }
+                    else
+                    {
+                        safe = true;
+                    }
+                }
+            }
+            /*For increasing states */
+            else if (countDecrease <= 1 && countStable <= 1)
+            {
+                auto posIdxIncreaseDecreaseValue = distance(increaseDecreaseValues.begin(), find_if(increaseDecreaseValues.begin(), increaseDecreaseValues.end(), comp));
+                if (posIdxIncreaseDecreaseValue >= report.size() - 1)
+                {
+                    posIdxIncreaseDecreaseValue = distance(increaseDecreaseState.begin(), find(increaseDecreaseState.begin(), increaseDecreaseState.end(), "Decrease"));
+                }
+                else if (posIdxIncreaseDecreaseValue > 0 && posIdxIncreaseDecreaseValue < report.size() - 1 &&
+                         ((report.at(posIdxIncreaseDecreaseValue - 1) > report.at(posIdxIncreaseDecreaseValue) &&
+                           report.at(posIdxIncreaseDecreaseValue + 1) > report.at(posIdxIncreaseDecreaseValue) &&
+                           abs(report.at(posIdxIncreaseDecreaseValue - 1) - report.at(posIdxIncreaseDecreaseValue + 1)) > 1 &&
+                           abs(report.at(posIdxIncreaseDecreaseValue - 1) - report.at(posIdxIncreaseDecreaseValue + 1)) < 4) ||
+                          (report.at(posIdxIncreaseDecreaseValue - 1) < report.at(posIdxIncreaseDecreaseValue) &&
+                           report.at(posIdxIncreaseDecreaseValue + 1) < report.at(posIdxIncreaseDecreaseValue) &&
+                           abs(report.at(posIdxIncreaseDecreaseValue - 1) - report.at(posIdxIncreaseDecreaseValue + 1)) > 1 &&
+                           abs(report.at(posIdxIncreaseDecreaseValue - 1) - report.at(posIdxIncreaseDecreaseValue + 1)) < 4)))
+                {
+                    posIdxIncreaseDecreaseValue--;
+                }
+                for (size_t i = 0; i < report.size(); i++)
+                {
+                    if (i != posIdxIncreaseDecreaseValue + 1)
+                    {
+                        tempReportValues.push_back(report.at(i));
+                    }
+                }
+                increaseDecreaseValues.clear();
+                for (size_t idxValue = 0; idxValue < tempReportValues.size() - 1; idxValue++)
+                {
+                    increaseDecreaseValues.push_back(abs(tempReportValues.at(idxValue) - tempReportValues.at(idxValue + 1)));
+                }
+
+                for (int value : increaseDecreaseValues)
+                {
+                    if (value > 3 || value < 1)
+                    {
+                        safe = false;
+                        break;
+                        ;
+                    }
+                    else
+                    {
+                        safe = true;
+                    }
+                }
+            }
+            /* Not valid*/
+            else
             {
                 safe = false;
-                break;
             }
         }
     }
@@ -52,6 +156,9 @@ bool isSafeReport(vector<int> report)
 {
     vector<int> increaseDecreaseValues;
     vector<string> increaseDecreaseState;
+    int countIncrease = 0;
+    int countDecrease = 0;
+    int countStable = 0;
     bool safe = true;
     for (size_t reportIdx = 0; reportIdx < report.size() - 1; reportIdx++)
     {
@@ -69,13 +176,15 @@ bool isSafeReport(vector<int> report)
         }
         increaseDecreaseValues.push_back(report.at(reportIdx) - report.at(reportIdx + 1));
     }
+    countIncrease = count(increaseDecreaseState.begin(), increaseDecreaseState.end(), "Increase");
+    countDecrease = count(increaseDecreaseState.begin(), increaseDecreaseState.end(), "Decrease");
+    countStable = count(increaseDecreaseState.begin(), increaseDecreaseState.end(), "Stable");
     if (
-        (count(increaseDecreaseState.begin(), increaseDecreaseState.end(), "Decrease") >= increaseDecreaseState.size() - 1 &&
-         count(increaseDecreaseState.begin(), increaseDecreaseState.end(), "Increase") <= 0 && count(increaseDecreaseState.begin(), increaseDecreaseState.end(), "Stable") <= 0) ||
-        count(increaseDecreaseState.begin(), increaseDecreaseState.end(), "Increase") >= increaseDecreaseState.size() - 1 &&
-            count(increaseDecreaseState.begin(), increaseDecreaseState.end(), "Decrease") <= 0 && count(increaseDecreaseState.begin(), increaseDecreaseState.end(), "Stable") <= 0)
+        (countDecrease >= increaseDecreaseState.size() - 1 &&
+         countIncrease <= 0 && countStable <= 0) ||
+        countIncrease >= increaseDecreaseState.size() - 1 &&
+            countDecrease <= 0 && countStable <= 0)
     {
-        string dd = "";
         for (int increaseDecreaseValue : increaseDecreaseValues)
         {
             if (abs(increaseDecreaseValue) < 1 || abs(increaseDecreaseValue) > 3)
@@ -100,7 +209,7 @@ int main(int argc, char const *argv[])
     FileOperations *operations = new FileOperations();
 
     std::tuple<vector<vector<string>>, FileOperations::FILE_OPERATIONS_FLAGS> result =
-        operations->getDataFormatted("../day2/example.txt");
+        operations->getDataFormatted("../day2/input.txt");
 
     if (std::get<1>(result) == FileOperations::ERROR_FILE_NOT_EXISTS)
     {
@@ -131,7 +240,7 @@ int main(int argc, char const *argv[])
             }
         }
     }
-    cout << "The number of safe reports are " << safeReports << endl;
-    cout << "The number of safe reports are " << safeReportsDampener << " with problem dampener" << endl;
+    std::cout << "The number of safe reports are " << safeReports << endl;
+    std::cout << "The number of safe reports are " << safeReportsDampener << " with problem dampener" << endl;
     return 0;
 }
